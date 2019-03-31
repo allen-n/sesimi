@@ -3,7 +3,11 @@ The goal of this project is a defense against fixed code gate attack based on th
 
 ## Getting Started
 
-In progress FIXME
+We're using the ESP8266 board from HiLetgo, youtube video to get up and running on this board, along with some info on it, here: [Getting started with NodeMCU (ESP8266 tutorial #1)](https://www.youtube.com/watch?v=p06NNRq5NTU)
+
+Url to add the board to the arduino IDE: http://arduino.esp8266.com/versions/2.5.0/package_esp8266com_index.json
+
+Node MCU Driver code (necessary if building on Windows like I am), the bottom of your board will tell you which driver you need, the 2102 driver is available here: [CP210x USB to UART Bridge VCP Drivers](https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers)
 
 ### Prerequisites
 
