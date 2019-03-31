@@ -526,7 +526,6 @@ bool CC1101::sendData(CCPACKET packet)
 
   // Declare to be in Rx state
   rfState = RFSTATE_RX;
-
   return res;
 }
 

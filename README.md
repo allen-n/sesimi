@@ -23,7 +23,16 @@ Pinout thanks to [David](https://smile.amazon.com/gp/profile/amzn1.account.AFHOM
 
 7.SO 8.GDO2
 
-
+For our particular combination of boards, this mapping looks like the following from CC1101 to NodeMCU ESP8622:
+* 1 -> GND
+* 2 -> 3V3
+* 3 -> GPIO5 (D1)
+* 4 -> GPIO15 (D8)
+* 5 -> GPIO14 (D5)
+* 6 -> GPIO13 (D7)
+* 7 -> GPIO12 (D6)
+* 8 -> NC
+<!-- 
 ### Prerequisites
 
 In progress FIXME
@@ -73,7 +82,7 @@ Give an example
 
 ## Deployment
 
-Add additional notes about how to deploy this on a live system
+Add additional notes about how to deploy this on a live system -->
 
 ## Built With
 
@@ -83,14 +92,15 @@ Add additional notes about how to deploy this on a live system
 
 ## Contributing
 
-Talk to me.
+Send me an email, but at the moment this is just a personal project. Always happy to add contributors!
 
 ## Versioning
 
 None at the moment. 
+
 ## Authors
 
-* **Allen Nikka** - *Initial work* - [My Website](http://allennikka.com)
+* **Allen Nikka** - *Initial work* - [See more here](http://allennikka.com)
 
 <!-- See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project. -->
 
@@ -100,6 +110,6 @@ None at the moment.
 
 ## Acknowledgments
 
-* Samy for revitalizing the project after an initial stagnation
-* veoink for your cc1101 library
+* [Samy](https://github.com/samyk) for revitalizing the project after an initial stagnation, reccomending CC1101 chip
+* [veoink](https://github.com/veonik) for your arduino - cc1101 library (modified here for use with ESP8622 on NodeMCU)
 

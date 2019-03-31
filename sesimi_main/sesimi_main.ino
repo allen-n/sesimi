@@ -14,8 +14,9 @@
 #define CC1101Interrupt 9 // Pin 9
 #define CC1101_GDO0 9
 #else
-#define CC1101Interrupt 11 // Pin 2
-#define CC1101_GDO0 2
+#define CC1101Interrupt 5 // Pin D1
+#define CC1101_GDO0 5
+#define SS 15 //Select bit for HSPI bus on ESP8622 is pin 15
 #endif
 
 CC1101 radio;
@@ -34,12 +35,14 @@ void messageReceived()
 void setup()
 {
   pinMode(LED_BUILTIN, OUTPUT); // Initialize the LED_BUILTIN pin as an output
+  pinMode(SS, OUTPUT);
   radio.init();
   radio.setSyncWord(syncWord);
   radio.setCarrierFreq(CFREQ_433);
   radio.disableAddressCheck();
   radio.setTxPowerAmp(PA_LongDistance);
   radio.setModulation(ASK_OOK);
+  delay(1000);
 
   Serial.begin(9600);
   Serial.println("Beginning communication:");
@@ -51,13 +54,7 @@ void setup()
   Serial.println(radio.readReg(CC1101_MARCSTATE, CC1101_STATUS_REGISTER) & 0x1f);
 
   Serial.println(F("CC1101 radio initialized."));
-  attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
-
-  // out:
-  // CC1101_PARTNUM 255
-  // CC1101_VERSION 255
-  // CC1101_MARCSTATE 31
-  // CC1101 radio initialized.
+  // attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
 }
 
 // Get signal strength indicator in dBm.
@@ -86,7 +83,7 @@ void loop()
   digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on (Note that LOW is the voltage level
   if (packetWaiting)
   {
-    detachInterrupt(CC1101Interrupt);
+    // detachInterrupt(CC1101Interrupt);
     packetWaiting = false;
     CCPACKET packet;
     if (radio.receiveData(&packet) > 0)
@@ -111,13 +108,14 @@ void loop()
       }
     }
 
-    attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
+    // attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
   }
   unsigned long now = millis();
+
   if (now > lastSend + sendDelay)
   {
-    digitalWrite(LED_BUILTIN, LOW); //Blink LED if we hit the timer portion
-    detachInterrupt(CC1101Interrupt);
+    digitalWrite(LED_BUILTIN, LOW);
+    // detachInterrupt(CC1101Interrupt); //TODO: Determine why these interrupts cause soft resets
 
     lastSend = now;
     const char *message = "1010";
@@ -126,10 +124,15 @@ void loop()
     packet.length = strlen(message) + 1;
     strncpy((char *)packet.data, message, packet.length);
 
-    bool sendSuccess = radio.sendData(packet);
-    Serial.print(F("Sent packet..."));
-    Serial.println(sendSuccess);
+    if (radio.sendData(packet))
+    {
+      Serial.println(F("Sent packet..."));
+    }
+    else
+    {
+      Serial.println(F("Failed to send packet..."));
+    }
 
-    attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
+    // attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
   }
 }
