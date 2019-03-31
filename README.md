@@ -3,11 +3,26 @@ The goal of this project is a defense against fixed code gate attack based on th
 
 ## Getting Started
 
-We're using the ESP8266 board from HiLetgo, youtube video to get up and running on this board, along with some info on it, here: [Getting started with NodeMCU (ESP8266 tutorial #1)](https://www.youtube.com/watch?v=p06NNRq5NTU)
+### NodeMCU ESP8266 (HiLetgo)
+We're using the NodeMCU ESP8266 board from HiLetgo, youtube video to get up and running on this board, along with some info on it, here: [Getting started with NodeMCU (ESP8266 tutorial #1)](https://www.youtube.com/watch?v=p06NNRq5NTU)
 
 Url to add the board to the arduino IDE: http://arduino.esp8266.com/versions/2.5.0/package_esp8266com_index.json
 
 Node MCU Driver code (necessary if building on Windows like I am), the bottom of your board will tell you which driver you need, the 2102 driver is available here: [CP210x USB to UART Bridge VCP Drivers](https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers)
+
+### CC1101 Board
+
+We are using the Solu CC1101 Wireless Transceiver Module with spring Antenna for Arduino// Wireless RF Transceiver 315/433/868/915MHZ + spring Antenna Wireless Module, link to purchase [here](https://smile.amazon.com/gp/product/B00XDL9E64/ref=ppx_yo_dt_b_asin_title_o00_s00?ie=UTF8&psc=1)
+
+Pinout thanks to [David](https://smile.amazon.com/gp/profile/amzn1.account.AFHOMZSV6FL4BO6DST5TR4UGLGQQ/ref=cm_cr_dp_d_gw_tr?ie=UTF8):
+1.GND 2.VCC
+
+3.GDO0 4.CSN
+
+5.SCLK 6.SI
+
+7.SO 8.GDO2
+
 
 ### Prerequisites
 
