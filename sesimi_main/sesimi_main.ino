@@ -25,7 +25,7 @@ byte syncWord[2] = {199, 10};
 bool packetWaiting;
 
 unsigned long lastSend = 0;
-unsigned int sendDelay = 5000;
+unsigned int sendDelay = 500;
 
 void messageReceived()
 {
@@ -38,10 +38,13 @@ void setup()
   pinMode(SS, OUTPUT);
   radio.init();
   radio.setSyncWord(syncWord);
-  radio.setCarrierFreq(CFREQ_433);
+  // radio.setCarrierFreq(CFREQ_433);
   radio.disableAddressCheck();
   radio.setTxPowerAmp(PA_LongDistance);
-  radio.setModulation(ASK_OOK);
+  // radio.setModulation(ASK_OOK);
+  radio.set433MHzAsk();
+  //TODO: Determine why this is centered at 309Mhz not 300, play with smartRF settings?
+  radio.setCarrierFreq(CFREQ_300);
   delay(1000);
 
   Serial.begin(9600);
@@ -52,6 +55,16 @@ void setup()
   Serial.println(radio.readReg(CC1101_VERSION, CC1101_STATUS_REGISTER));
   Serial.print(F("CC1101_MARCSTATE "));
   Serial.println(radio.readReg(CC1101_MARCSTATE, CC1101_STATUS_REGISTER) & 0x1f);
+  Serial.print(F("CC1101_PATABLE "));
+  byte buff[CC1101_PATABLE_SIZE];
+  radio.readBurstReg(buff, CC1101_PATABLE, CC1101_PATABLE_SIZE); //FIXME, make private again
+  for(size_t i = 0; i < CC1101_PATABLE_SIZE; ++i)
+  {
+    Serial.print(buff[i]);
+    Serial.print(", ");
+  }
+  
+  Serial.println();
 
   Serial.println(F("CC1101 radio initialized."));
   // attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
@@ -76,6 +89,10 @@ int lqi(char raw)
 {
   return 0x3F - raw;
 }
+
+const char *sendBits[] = {"111", "000", "111", "000"};
+uint8_t sendBitsIndex = 0;
+uint8_t sendBitsSize = 4;
 
 // the loop function runs over and over again forever
 void loop()
@@ -118,7 +135,9 @@ void loop()
     // detachInterrupt(CC1101Interrupt); //TODO: Determine why these interrupts cause soft resets
 
     lastSend = now;
-    const char *message = "1010";
+    // const char *message = "1010";
+    const char *message = sendBits[sendBitsIndex % sendBitsSize];
+    sendBitsIndex++;
     CCPACKET packet;
     // We also need to include the 0 byte at the end of the string
     packet.length = strlen(message) + 1;

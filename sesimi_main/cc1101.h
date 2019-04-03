@@ -39,6 +39,7 @@ enum CFREQ
   CFREQ_915,
   CFREQ_433,
   CFREQ_918,
+  CFREQ_300,
   CFREQ_LAST
 };
 
@@ -64,7 +65,6 @@ enum RFSTATE
   RFSTATE_RX,
   RFSTATE_TX
 };
-
 
 #ifdef ESP32
 #define CC1101_GDO0 34 // 34 input interrupt pin, can be changed
@@ -98,9 +98,10 @@ enum RFSTATE
 /**
  * PATABLE & FIFO's
  */
-#define CC1101_PATABLE 0x3E // PATABLE address
-#define CC1101_TXFIFO 0x3F  // TX FIFO address
-#define CC1101_RXFIFO 0x3F  // RX FIFO address
+#define CC1101_PATABLE 0x3E   // PATABLE address
+#define CC1101_TXFIFO 0x3F    // TX FIFO address
+#define CC1101_RXFIFO 0x3F    // RX FIFO address
+#define CC1101_PATABLE_SIZE 8 // number of bytes that can be read into PATable
 
 /**
  * Command strobes
@@ -351,6 +352,26 @@ private:
      */
   void writeBurstReg(uint8_t regAddr, uint8_t *buffer, uint8_t len);
 
+  //FIXME, for testing
+  //   /**
+  //      * readBurstReg
+  //      *
+  //      * Read burst data from CC1101 via SPI
+  //      *
+  //      * 'buffer'	Buffer where to copy the result to
+  //      * 'regAddr'	Register address
+  //      * 'len'	Data length
+  //      */
+  //   void readBurstReg(uint8_t *buffer, uint8_t regAddr, uint8_t len);
+
+  /**
+     * setRegsFromEeprom
+     * 
+     * Set registers from EEPROM
+     */
+  void setRegsFromEeprom(void);
+
+public:
   /**
      * readBurstReg
      * 
@@ -361,15 +382,6 @@ private:
      * 'len'	Data length
      */
   void readBurstReg(uint8_t *buffer, uint8_t regAddr, uint8_t len);
-
-  /**
-     * setRegsFromEeprom
-     * 
-     * Set registers from EEPROM
-     */
-  void setRegsFromEeprom(void);
-
-public:
   /*
      * RF state
      */
@@ -523,6 +535,34 @@ public:
   void setModulation(uint8_t mod);
 
   /**
+     * setDataRate
+     * 
+     * Set datarate in Kbps
+     * 
+     * 'rate'	is the new datarate, 
+     */
+  void setDataRate(uint8_t rate);
+
+  /**
+     * setContinuousTx
+     * 
+     * Set tx mode (continuous or packet)
+     * 
+     * 'continous' is a boolean, if true, 
+     * tx is continous, else it is packet
+     */
+  void setContinuousTx(bool continuous);
+
+  /**
+     * set433HzAsk
+     * 
+     * Use paramaters from SmartRFStudio to 
+     * set 433 MHz, ASK transmission type
+     * 
+     */
+  void set433MHzAsk();
+
+  /**
      * setChannel
      * 
      * Set frequency channel
@@ -576,6 +616,15 @@ public:
   void setTxState(void);
 
   /**
+     * setWhitenData
+     * 
+     * Turn data whitening on or off
+     * 
+     * 'whiten' when true, whiten data, else do not
+     */
+  void setWhitenData(bool whiten);
+
+  /**
      * setTxPowerAmp
      * 
      * Set PATABLE value
@@ -586,6 +635,18 @@ public:
   {
     writeReg(CC1101_PATABLE, paLevel);
   }
+
+  /**
+     * setPATable with byte array, up to 8 entries
+     * 
+     * Set PATABLE value
+     * 
+     * @param paLevel array of amplification value of len bytes
+     * @param len number of bytes in PA level, should be <= 8
+     * return:
+     *   true if valid input, else false
+     */
+  bool setPATable(uint8_t paLevel[], uint8_t len);
 };
 
 #endif

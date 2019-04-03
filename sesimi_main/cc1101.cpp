@@ -376,6 +376,11 @@ void CC1101::setCarrierFreq(byte freq)
     writeReg(CC1101_FREQ1, CC1101_DEFVAL_FREQ1_918);
     writeReg(CC1101_FREQ0, CC1101_DEFVAL_FREQ0_918);
     break;
+  case CFREQ_300:
+    writeReg(CC1101_FREQ2, 0x0B);
+    writeReg(CC1101_FREQ1, 0x89);
+    writeReg(CC1101_FREQ0, 0xD8);
+    break;
   default:
     writeReg(CC1101_FREQ2, CC1101_DEFVAL_FREQ2_868);
     writeReg(CC1101_FREQ1, CC1101_DEFVAL_FREQ1_868);
@@ -396,12 +401,16 @@ void CC1101::setCarrierFreq(byte freq)
      */
 void CC1101::setModulation(byte mod)
 {
+
+  byte PA_Power_FS[CC1101_PATABLE_SIZE] = {0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  byte PA_Power[CC1101_PATABLE_SIZE] = {0x00, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  setPATable(PA_Power_FS, CC1101_PATABLE_SIZE); //PA for all non ASK modulation is this
   switch (mod)
   {
   case ASK_OOK:
     writeReg(CC1101_MDMCFG2, 0x32);
     writeReg(CC1101_FREND0, 0x11);
-    // setTxPowerAmp(PA_LowPower); //TODO: Determine if this needs to be modified
+    setPATable(PA_Power, CC1101_PATABLE_SIZE);
     break;
   case FSK2:
     writeReg(CC1101_MDMCFG2, 0x02);
@@ -431,6 +440,61 @@ void CC1101::setModulation(byte mod)
   }
 
   devModulation = mod;
+}
+
+/**
+     * setDataRate
+     * 
+     * Set datarate in Kbps
+     * 
+     * 'rate'	is the new datarate, 
+     */
+void CC1101::setDataRate(uint8_t rate)
+{
+  //  TODO: Add relevant data rates
+}
+
+/**
+     * setContinuousTx
+     * 
+     * Set tx mode (continuous or packet)
+     * 
+     * 'continous' is a boolean, if true, 
+     * tx is continous, else it is packet
+     */
+void CC1101::setContinuousTx(bool continuous)
+{
+  if (continuous)
+  {
+    writeReg(CC1101_IOCFG2, 0x0B);
+    writeReg(CC1101_IOCFG0, 0x0C);
+    writeReg(CC1101_PKTCTRL0, 0x12);
+    writeReg(CC1101_MDMCFG2, 0x30);
+  }
+  else
+  {
+    writeReg(CC1101_IOCFG2, CC1101_DEFVAL_IOCFG2);
+    writeReg(CC1101_IOCFG0, CC1101_DEFVAL_IOCFG0);
+    writeReg(CC1101_PKTCTRL0, CC1101_DEFVAL_PKTCTRL0);
+    writeReg(CC1101_MDMCFG2, CC1101_DEFVAL_MDMCFG2);
+  }
+}
+
+/**
+     * setPATable with byte array, up to 8 entries
+     * 
+     * Set PATABLE value
+     * 
+     * @param paLevel array of amplification value bytes (up to 8 max)
+     * return:
+     *   true if valid input, else false
+     */
+bool CC1101::setPATable(uint8_t paLevel[], uint8_t len)
+{
+  if (len > 8)
+    return false;
+  else
+    writeBurstReg(CC1101_PATABLE, paLevel, len);
 }
 
 /**
@@ -597,4 +661,79 @@ void CC1101::setTxState(void)
 {
   cmdStrobe(CC1101_STX);
   rfState = RFSTATE_TX;
+}
+
+/**
+     * setWhitenData
+     * 
+     * Turn data whitening on or off
+     * 
+     * 'whiten' when true, whiten data, else do not
+     */
+void CC1101::setWhitenData(bool whiten)
+{
+  if (whiten)
+    writeReg(CC1101_PKTCTRL0, CC1101_DEFVAL_PKTCTRL0);
+  else
+    writeReg(CC1101_PKTCTRL0, 0x45);
+}
+
+/**
+     * set433HzAsk
+     * 
+     * Use paramaters from SmartRFStudio to 
+     * set 433 MHz, ASK transmission type
+     * 
+     */
+void CC1101::set433MHzAsk()
+{
+  byte PA_Power[CC1101_PATABLE_SIZE] = {0x00, PA_LongDistance, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  setPATable(PA_Power, CC1101_PATABLE_SIZE); //PA for all non ASK modulation is this
+  writeReg(0x02, 0x06);
+  writeReg(0x03, 0x47);
+  writeReg(0x08, 0x01); //change to 0x05 to get CRC back
+  writeReg(0x0B, 0x06);
+  writeReg(0x0D, 0x10);
+  writeReg(0x0E, 0xA7);
+  writeReg(0x0F, 0x62);
+  writeReg(0x10, 0xF5);
+  writeReg(0x11, 0x83);
+  writeReg(0x12, 0x30);
+  writeReg(0x15, 0x15);
+  writeReg(0x18, 0x18);
+  writeReg(0x19, 0x14);
+  writeReg(0x1D, 0x92);
+  writeReg(0x20, 0xFB);
+  writeReg(0x22, 0x11);
+  writeReg(0x23, 0xE9);
+  writeReg(0x24, 0x2A);
+  writeReg(0x25, 0x00);
+  writeReg(0x26, 0x1F);
+  writeReg(0x2C, 0x81);
+  writeReg(0x2D, 0x35);
+  writeReg(0x2E, 0x09);
+
+  /**
+   *  Address Config = No address check 
+      Base Frequency = 432.999817 
+      CRC Autoflush = false 
+      CRC Enable = false 
+      Carrier Frequency = 432.999817 
+      Channel Number = 0 
+      Channel Spacing = 199.951172 
+      Data Format = Normal mode 
+      Data Rate = 1.19948 
+      Deviation = 5.157471 
+      Device Address = 0 
+      Manchester Enable = false 
+      Modulation Format = ASK/OOK 
+      PA Ramping = false 
+      Packet Length = 255 
+      Packet Length Mode = Variable packet length mode. Packet length configured by the first byte after sync word 
+      Preamble Count = 4 
+      RX Filter BW = 58.035714 
+      Sync Word Qualifier Mode = No preamble/sync 
+      TX Power = 0 
+      Whitening = false 
+ */
 }
