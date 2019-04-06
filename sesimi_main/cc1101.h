@@ -35,12 +35,12 @@
  */
 enum CFREQ
 {
-  CFREQ_868 = 0,
-  CFREQ_915,
-  CFREQ_433,
-  CFREQ_918,
-  CFREQ_300,
-  CFREQ_LAST
+   CFREQ_868 = 0,
+   CFREQ_915,
+   CFREQ_433,
+   CFREQ_918,
+   CFREQ_300,
+   CFREQ_LAST
 };
 
 /**
@@ -48,11 +48,11 @@ enum CFREQ
  */
 enum MODULATION
 {
-  ASK_OOK = 0,
-  FSK2,
-  FSK4,
-  GFSK,
-  MSK
+   ASK_OOK = 0,
+   FSK2,
+   FSK4,
+   GFSK,
+   MSK
 
 };
 
@@ -61,16 +61,16 @@ enum MODULATION
  */
 enum RFSTATE
 {
-  RFSTATE_IDLE = 0,
-  RFSTATE_RX,
-  RFSTATE_TX
+   RFSTATE_IDLE = 0,
+   RFSTATE_RX,
+   RFSTATE_TX
 };
 
-#ifdef ESP32
-#define CC1101_GDO0 34 // 34 input interrupt pin, can be changed
-#else
-#define CC1101_GDO0 5 // GDO0 input interrupt pin
-#endif
+// #ifdef ESP32
+// #define CC1101_GDO0 34 // 34 input interrupt pin, can be changed
+// #else
+// #define CC1101_GDO0 5 // GDO0 input interrupt pin
+// #endif
 
 /**
  * Working modes
@@ -341,7 +341,7 @@ enum RFSTATE
 class CC1101
 {
 private:
-  /**
+   /**
      * writeBurstReg
      * 
      * Write multiple registers into the CC1101 IC via SPI
@@ -350,29 +350,29 @@ private:
      * 'buffer'	Data to be writen
      * 'len'	Data length
      */
-  void writeBurstReg(uint8_t regAddr, uint8_t *buffer, uint8_t len);
+   void writeBurstReg(uint8_t regAddr, uint8_t *buffer, uint8_t len);
 
-  //FIXME, for testing
-  //   /**
-  //      * readBurstReg
-  //      *
-  //      * Read burst data from CC1101 via SPI
-  //      *
-  //      * 'buffer'	Buffer where to copy the result to
-  //      * 'regAddr'	Register address
-  //      * 'len'	Data length
-  //      */
-  //   void readBurstReg(uint8_t *buffer, uint8_t regAddr, uint8_t len);
+   //FIXME, for testing
+   //   /**
+   //      * readBurstReg
+   //      *
+   //      * Read burst data from CC1101 via SPI
+   //      *
+   //      * 'buffer'	Buffer where to copy the result to
+   //      * 'regAddr'	Register address
+   //      * 'len'	Data length
+   //      */
+   //   void readBurstReg(uint8_t *buffer, uint8_t regAddr, uint8_t len);
 
-  /**
+   /**
      * setRegsFromEeprom
      * 
      * Set registers from EEPROM
      */
-  void setRegsFromEeprom(void);
+   void setRegsFromEeprom(void);
 
 public:
-  /**
+   /**
      * readBurstReg
      * 
      * Read burst data from CC1101 via SPI
@@ -381,66 +381,66 @@ public:
      * 'regAddr'	Register address
      * 'len'	Data length
      */
-  void readBurstReg(uint8_t *buffer, uint8_t regAddr, uint8_t len);
-  /*
+   void readBurstReg(uint8_t *buffer, uint8_t regAddr, uint8_t len);
+   /*
      * RF state
      */
-  uint8_t rfState;
+   uint8_t rfState;
 
-  /**
+   /**
      * Carrier frequency
      */
-  uint8_t carrierFreq;
+   uint8_t carrierFreq;
 
-  /**
+   /**
      * Working mode (speed, ...)
      */
-  uint8_t workMode;
+   uint8_t workMode;
 
-  /**
+   /**
      * Frequency channel
      */
-  uint8_t channel;
+   uint8_t channel;
 
-  /**
+   /**
      * Synchronization word
      */
-  uint8_t syncWord[2];
+   uint8_t syncWord[2];
 
-  /**
+   /**
      * Device address
      */
-  uint8_t devAddress;
+   uint8_t devAddress;
 
-  /**
+   /**
      * Modulation scheme
      */
-  uint8_t devModulation;
+   uint8_t devModulation;
 
-  /**
+   /**
      * CC1101
      * 
      * Class constructor
      */
-  CC1101(void);
+   CC1101(void);
 
-  /**
+   /**
      * cmdStrobe
      * 
      * Send command strobe to the CC1101 IC via SPI
      * 
      * 'cmd'	Command strobe
      */
-  void cmdStrobe(uint8_t cmd);
+   void cmdStrobe(uint8_t cmd);
 
-  /**
+   /**
      * wakeUp
      * 
      * Wake up CC1101 from Power Down state
      */
-  void wakeUp(void);
+   void wakeUp(void);
 
-  /**
+   /**
      * readReg
      * 
      * Read CC1101 register via SPI
@@ -451,9 +451,9 @@ public:
      * Return:
      * 	Data byte returned by the CC1101 IC
      */
-  uint8_t readReg(uint8_t regAddr, uint8_t regType);
+   uint8_t readReg(uint8_t regAddr, uint8_t regType);
 
-  /**
+   /**
      * writeReg
      * 
      * Write single register into the CC1101 IC via SPI
@@ -461,23 +461,23 @@ public:
      * 'regAddr'	Register address
      * 'value'	Value to be writen
      */
-  void writeReg(uint8_t regAddr, uint8_t value);
+   void writeReg(uint8_t regAddr, uint8_t value);
 
-  /**
+   /**
      * setCCregs
      * 
      * Configure CC1101 registers
      */
-  void setCCregs(void);
+   void setCCregs(void);
 
-  /**
+   /**
      * reset
      * 
      * Reset CC1101
      */
-  void reset(void);
+   void reset(void);
 
-  /**
+   /**
      * init
      * 
      * Initialize CC1101 radio
@@ -485,9 +485,9 @@ public:
      * @param freq Carrier frequency
      * @param mode Working mode (speed, ...)
      */
-  void init(uint8_t freq = CFREQ_868, uint8_t mode = 0);
+   void init(uint8_t freq = CFREQ_868, uint8_t mode = 0);
 
-  /**
+   /**
      * setSyncWord
      * 
      * Set synchronization word
@@ -495,36 +495,36 @@ public:
      * 'syncH'	Synchronization word - High byte
      * 'syncL'	Synchronization word - Low byte
      */
-  void setSyncWord(uint8_t syncH, uint8_t syncL);
+   void setSyncWord(uint8_t syncH, uint8_t syncL);
 
-  /**
+   /**
      * setSyncWord (overriding method)
      * 
      * Set synchronization word
      * 
      * 'syncH'	Synchronization word - pointer to 2-byte array
      */
-  void setSyncWord(uint8_t *sync);
+   void setSyncWord(uint8_t *sync);
 
-  /**
+   /**
      * setDevAddress
      * 
      * Set device address
      * 
      * 'addr'	Device address
      */
-  void setDevAddress(uint8_t addr);
+   void setDevAddress(uint8_t addr);
 
-  /**
+   /**
      * setCarrierFreq
      * 
      * Set carrier frequency
      * 
      * 'freq'	New carrier frequency
      */
-  void setCarrierFreq(uint8_t freq);
+   void setCarrierFreq(uint8_t freq);
 
-  /**
+   /**
      * setModulation
      * 
      * Set modulation scheme
@@ -532,18 +532,18 @@ public:
      * 'mod'	is the new modulation scheme, 
      * see MODULATION enum for options
      */
-  void setModulation(uint8_t mod);
+   void setModulation(uint8_t mod);
 
-  /**
+   /**
      * setDataRate
      * 
      * Set datarate in Kbps
      * 
      * 'rate'	is the new datarate, 
      */
-  void setDataRate(uint8_t rate);
+   void setDataRate(uint8_t rate);
 
-  /**
+   /**
      * setContinuousTx
      * 
      * Set tx mode (continuous or packet)
@@ -551,34 +551,55 @@ public:
      * 'continous' is a boolean, if true, 
      * tx is continous, else it is packet
      */
-  void setContinuousTx(bool continuous);
+   void setContinuousTx(bool continuous);
 
-  /**
+   /**
      * set433HzAsk
      * 
      * Use paramaters from SmartRFStudio to 
      * set 433 MHz, ASK transmission type
      * 
      */
-  void set433MHzAsk();
+   void set433MHzAsk();
 
-  /**
+   /**
+     * set433HzAsk
+     * 
+     * Use paramaters from SmartRFStudio to 
+     * set 300 MHz, ASK transmission type
+     * 
+     */
+   void set300MhzAsk();
+
+   /**
      * setChannel
      * 
      * Set frequency channel
      * 
      * 'chnl'	Frequency channel
      */
-  void setChannel(uint8_t chnl);
+   void setChannel(uint8_t chnl);
 
-  /**
+   /**
      * setPowerDownState
      * 
      * Put CC1101 into power-down state
      */
-  void setPowerDownState();
+   void setPowerDownState();
 
-  /**
+   /**
+    * sendDataSerial
+    * 
+    * Send data packets continuously via RF
+    * 'txBuffer' is a byte buffer to be transmitted
+    * 'size' is the size of the byte buffer
+    *  Return:
+    *    True if the transmission succeeds
+    *    False otherwise
+    **/
+   bool sendDataSerial(byte *txBuffer, uint8_t size);
+
+   /**
      * sendData
      * 
      * Send data packet via RF
@@ -589,9 +610,9 @@ public:
      *    True if the transmission succeeds
      *    False otherwise
      */
-  bool sendData(CCPACKET packet);
+   bool sendData(CCPACKET packet);
 
-  /**
+   /**
      * receiveData
      * 
      * Read data packet from RX FIFO
@@ -599,44 +620,44 @@ public:
      * Return:
      * 	Amount of bytes received
      */
-  uint8_t receiveData(CCPACKET *packet);
+   uint8_t receiveData(CCPACKET *packet);
 
-  /**
+   /**
      * setRxState
      * 
      * Enter Rx state
      */
-  void setRxState(void);
+   void setRxState(void);
 
-  /**
+   /**
      * setTxState
      * 
      * Enter Tx state
      */
-  void setTxState(void);
+   void setTxState(void);
 
-  /**
+   /**
      * setWhitenData
      * 
      * Turn data whitening on or off
      * 
      * 'whiten' when true, whiten data, else do not
      */
-  void setWhitenData(bool whiten);
+   void setWhitenData(bool whiten);
 
-  /**
+   /**
      * setTxPowerAmp
      * 
      * Set PATABLE value
      * 
      * @param paLevel amplification value
      */
-  inline void setTxPowerAmp(uint8_t paLevel)
-  {
-    writeReg(CC1101_PATABLE, paLevel);
-  }
+   inline void setTxPowerAmp(uint8_t paLevel)
+   {
+      writeReg(CC1101_PATABLE, paLevel);
+   }
 
-  /**
+   /**
      * setPATable with byte array, up to 8 entries
      * 
      * Set PATABLE value
@@ -646,7 +667,7 @@ public:
      * return:
      *   true if valid input, else false
      */
-  bool setPATable(uint8_t paLevel[], uint8_t len);
+   bool setPATable(uint8_t paLevel[], uint8_t len);
 };
 
 #endif

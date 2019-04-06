@@ -25,6 +25,28 @@
 
 #include "cc1101.h"
 
+/*
+  Board definition Macros
+*/
+#if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
+#define CC1101Interrupt 4 // Pin 19
+#define CC1101_GDO0 19
+#elif defined(__MK64FX512__)
+// Teensy 3.5
+#define CC1101Interrupt 9 // Pin 9
+#define CC1101_GDO0 9
+#else
+// Interrupt Pin (also GDO0)
+#define CC1101Interrupt 3 // Pin D1
+#define CC1101_GDO0 3
+// Serial clock output line of CC1101
+#define CC1101_SCLK 5
+// Data out line to CC1101 for continuous TX
+#define CC1101_GDO2 4
+// Select bit for HSPI bus on ESP8622 is pin 15
+#define SS 15
+#endif
+
 /**
  * Macros
  */
@@ -40,6 +62,20 @@
 #define wait_GDO0_high() while (!getGDO0state())
 // Wait until GDO0 line goes low
 #define wait_GDO0_low() while (getGDO0state())
+
+/*
+  Continuous TX Macros
+*/
+// Continuous TX 1
+#define gd02_Select() digitalWrite(CC1101_GDO2, HIGH)
+// Continuous TX 0
+#define gd02_Deselect() digitalWrite(CC1101_GDO2, LOW)
+// Get SCLK pin state
+#define getSCLKstate() digitalRead(CC1101_SCLK)
+// Wait until SCLK line goes high
+#define wait_SCLK_high() while (!getSCLKstate())
+// Wait until SCLK line goes low
+#define wait_SCLK_low() while (getSCLKstate())
 
 /**
   * PATABLE
@@ -289,6 +325,10 @@ void CC1101::init(uint8_t freq, uint8_t mode)
 #endif
   SPI.begin();                 // Initialize SPI interface
   pinMode(CC1101_GDO0, INPUT); // Config GDO0 as input
+  pinMode(SS, OUTPUT);
+  pinMode(CC1101Interrupt, INPUT);
+  pinMode(CC1101_SCLK, INPUT);
+  pinMode(CC1101_GDO2, INPUT);
 
   reset(); // Reset CC1101
 
@@ -511,6 +551,77 @@ void CC1101::setPowerDownState()
 }
 
 /**
+ * sendDataSerial
+ * 
+ * Send data packets continuously via RF
+ * 'txBuffer' is a byte buffer to be transmitted
+ * 'size' is the size of the byte buffer
+ *  Return:
+ *    True if the transmission succeeds
+ *    False otherwise
+ **/
+bool CC1101::sendDataSerial(byte *txBuffer, uint8_t size)
+{
+  if (size <= 0)
+    return false;
+
+  // MSB of the first byte needs to ready on the data line before strobing TX
+  byte firstByte = txBuffer[0];
+
+  if (((firstByte >> 7) & 0x1) == 0)
+  {
+    gd02_Deselect();
+  }
+  else
+  {
+    gd02_Select();
+  }
+
+  setTxState();
+
+  // Transmit the first byte
+  for (uint8_t i = 1; i < 8; i++)
+  {
+    wait_SCLK_high();
+
+    if (((firstByte >> (7 - i)) & 0x1) == 0)
+      gd02_Deselect();
+    else
+      gd02_Select();
+
+    wait_SCLK_low();
+  }
+
+  // Transmite remaining bytes
+  for (uint8_t buffIdx = 1; buffIdx < size; ++buffIdx)
+  {
+    for (uint8_t i = 0; i < 8; i++)
+    {
+      wait_SCLK_high();
+
+      if (((firstByte >> (7 - i)) & 0x1) == 0)
+        gd02_Deselect();
+      else
+        gd02_Select();
+
+      wait_SCLK_low();
+    }
+  }
+
+  wait_SCLK_high();
+  wait_SCLK_low();
+
+  // Transmit 13 dummy bits (must be 26 if Manchester mode is enabled)
+  gd02_Deselect();
+  for (uint8_t i = 0; i < 13; ++i)
+  {
+    wait_SCLK_high();
+    wait_SCLK_low();
+  }
+  setIdleState();
+}
+
+/**
  * sendData
  * 
  * Send data packet via RF
@@ -543,9 +654,12 @@ bool CC1101::sendData(CCPACKET packet)
   if (tries >= 1000)
   {
     // TODO: MarcState sometimes never enters the expected state; this is a hack workaround.
-    return false;
+    return res;
   }
-
+  // TODO: Modify this function to make sure it works properly with
+  // continuous transmit mode, see:
+  // https://e2e.ti.com/support/wireless-connectivity/other-wireless/f/667/t/157309
+  // cc1101 datasheet page 33
   delayMicroseconds(500);
 
   if (packet.length > 0)
@@ -569,7 +683,7 @@ bool CC1101::sendData(CCPACKET packet)
 
     // Declare to be in Rx state
     rfState = RFSTATE_RX;
-    return false;
+    return res;
   }
 
   // Wait for the sync word to be transmitted
@@ -688,7 +802,7 @@ void CC1101::setWhitenData(bool whiten)
 void CC1101::set433MHzAsk()
 {
   byte PA_Power[CC1101_PATABLE_SIZE] = {0x00, PA_LongDistance, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  setPATable(PA_Power, CC1101_PATABLE_SIZE); //PA for all non ASK modulation is this
+  setPATable(PA_Power, CC1101_PATABLE_SIZE);
   writeReg(0x02, 0x06);
   writeReg(0x03, 0x47);
   writeReg(0x08, 0x01); //change to 0x05 to get CRC back
@@ -736,4 +850,58 @@ void CC1101::set433MHzAsk()
       TX Power = 0 
       Whitening = false 
  */
+}
+
+void CC1101::set300MhzAsk()
+{
+  byte PA_Power[CC1101_PATABLE_SIZE] = {0x00, 0xC2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  setPATable(PA_Power, CC1101_PATABLE_SIZE);
+  // continuous mode
+  writeReg(0x00, 0x0B);
+  writeReg(0x02, 0x0C);
+  writeReg(0x03, 0x47);
+  writeReg(0x08, 0x12);
+  writeReg(0x0B, 0x06);
+  writeReg(0x0D, 0x0B);
+  writeReg(0x0E, 0x89);
+  writeReg(0x0F, 0xD8);
+  writeReg(0x10, 0xF4);
+  writeReg(0x11, 0x43);
+  writeReg(0x12, 0x30);
+  writeReg(0x15, 0x15);
+  writeReg(0x18, 0x18);
+  writeReg(0x19, 0x16);
+  writeReg(0x20, 0xFB);
+  writeReg(0x22, 0x11);
+  writeReg(0x23, 0xE9);
+  writeReg(0x24, 0x2A);
+  writeReg(0x25, 0x00);
+  writeReg(0x26, 0x1F);
+  writeReg(0x2C, 0x81);
+  writeReg(0x2D, 0x35);
+  writeReg(0x2E, 0x00);
+
+  /**
+    Address Config = No address check 
+    Base Frequency = 299.999756 
+    CRC Autoflush = false 
+    CRC Enable = false 
+    Carrier Frequency = 299.999756 
+    Channel Number = 0 
+    Channel Spacing = 199.951172 
+    Data Format = Synchronous serial mode 
+    Data Rate = 0.50056 
+    Deviation = 5.157471 
+    Device Address = 0 
+    Manchester Enable = false 
+    Modulation Format = ASK/OOK 
+    PA Ramping = false 
+    Packet Length = 255 
+    Packet Length Mode = Infinite packet length mode 
+    Preamble Count = 4 
+    RX Filter BW = 58.035714 
+    Sync Word Qualifier Mode = No preamble/sync 
+    TX Power = 10 
+    Whitening = false 
+   **/
 }

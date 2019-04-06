@@ -6,18 +6,6 @@
 #include "cc1101.h"
 #include "ccpacket.h"
 
-#if defined(__AVR_ATmega2560__) || defined(__AVR_ATmega1280__)
-#define CC1101Interrupt 4 // Pin 19
-#define CC1101_GDO0 19
-#elif defined(__MK64FX512__)
-// Teensy 3.5
-#define CC1101Interrupt 9 // Pin 9
-#define CC1101_GDO0 9
-#else
-#define CC1101Interrupt 5 // Pin D1
-#define CC1101_GDO0 5
-#define SS 15 //Select bit for HSPI bus on ESP8622 is pin 15
-#endif
 
 CC1101 radio;
 
@@ -35,19 +23,24 @@ void messageReceived()
 void setup()
 {
   pinMode(LED_BUILTIN, OUTPUT); // Initialize the LED_BUILTIN pin as an output
-  pinMode(SS, OUTPUT);
+ 
   radio.init();
-  radio.setSyncWord(syncWord);
+  // One by one initialization
+  // radio.setSyncWord(syncWord);
   // radio.setCarrierFreq(CFREQ_433);
-  radio.disableAddressCheck();
-  radio.setTxPowerAmp(PA_LongDistance);
+  // radio.disableAddressCheck();
+  // radio.setTxPowerAmp(PA_LongDistance);
   // radio.setModulation(ASK_OOK);
-  radio.set433MHzAsk();
-  //TODO: Determine why this is centered at 309Mhz not 300, play with smartRF settings?
-  radio.setCarrierFreq(CFREQ_300);
+  // radio.setCarrierFreq(CFREQ_300); //TODO: Why this is centered at 309Mhz?
+
+  // Preset Initializations
+  // radio.set433MHzAsk();
+  radio.set300MhzAsk();
+
   delay(1000);
 
   Serial.begin(9600);
+  // Print radio initialization information
   Serial.println("Beginning communication:");
   Serial.print(F("CC1101_PARTNUM "));
   Serial.println(radio.readReg(CC1101_PARTNUM, CC1101_STATUS_REGISTER));
@@ -58,12 +51,12 @@ void setup()
   Serial.print(F("CC1101_PATABLE "));
   byte buff[CC1101_PATABLE_SIZE];
   radio.readBurstReg(buff, CC1101_PATABLE, CC1101_PATABLE_SIZE); //FIXME, make private again
-  for(size_t i = 0; i < CC1101_PATABLE_SIZE; ++i)
+  for (size_t i = 0; i < CC1101_PATABLE_SIZE; ++i)
   {
     Serial.print(buff[i]);
     Serial.print(", ");
   }
-  
+
   Serial.println();
 
   Serial.println(F("CC1101 radio initialized."));
@@ -90,7 +83,7 @@ int lqi(char raw)
   return 0x3F - raw;
 }
 
-const char *sendBits[] = {"111", "000", "111", "000"};
+const char *sendBits[] = {"111", "000", "101", "010"};
 uint8_t sendBitsIndex = 0;
 uint8_t sendBitsSize = 4;
 

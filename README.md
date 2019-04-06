@@ -15,6 +15,7 @@ Node MCU Driver code (necessary if building on Windows like I am), the bottom of
 We are using the Solu CC1101 Wireless Transceiver Module with spring Antenna for Arduino// Wireless RF Transceiver 315/433/868/915MHZ + spring Antenna Wireless Module, link to purchase [here](https://smile.amazon.com/gp/product/B00XDL9E64/ref=ppx_yo_dt_b_asin_title_o00_s00?ie=UTF8&psc=1)
 
 Pinout thanks to [David](https://smile.amazon.com/gp/profile/amzn1.account.AFHOMZSV6FL4BO6DST5TR4UGLGQQ/ref=cm_cr_dp_d_gw_tr?ie=UTF8):
+
 1.GND 2.VCC
 
 3.GDO0 4.CSN
@@ -31,7 +32,7 @@ For our particular combination of boards, this mapping looks like the following 
 * 5 -> GPIO14 (D5)
 * 6 -> GPIO13 (D7)
 * 7 -> GPIO12 (D6)
-* 8 -> NC
+* 8 -> GPIO4 (D2)
 <!-- 
 ### Prerequisites
 
