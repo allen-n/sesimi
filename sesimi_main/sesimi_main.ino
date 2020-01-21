@@ -6,7 +6,6 @@
 #include "cc1101.h"
 #include "ccpacket.h"
 
-
 CC1101 radio;
 
 byte syncWord[2] = {199, 10};
@@ -23,7 +22,7 @@ void messageReceived()
 void setup()
 {
   pinMode(LED_BUILTIN, OUTPUT); // Initialize the LED_BUILTIN pin as an output
- 
+
   radio.init();
   // One by one initialization
   // radio.setSyncWord(syncWord);
@@ -87,64 +86,106 @@ const char *sendBits[] = {"111", "000", "101", "010"};
 uint8_t sendBitsIndex = 0;
 uint8_t sendBitsSize = 4;
 
+void sendPacketTest()
+{
+  // const char *message = "1010";
+  const char *message = sendBits[sendBitsIndex % sendBitsSize];
+  sendBitsIndex++;
+  CCPACKET packet;
+  // We also need to include the 0 byte at the end of the string
+  packet.length = strlen(message) + 1;
+  strncpy((char *)packet.data, message, packet.length);
+
+  if (radio.sendData(packet))
+  {
+    Serial.println(F("Sent packet..."));
+  }
+  else
+  {
+    Serial.println(F("Failed to send packet..."));
+  }
+}
+
+byte txBuffer[] = {0xC3, 0xC3};
+const uint8_t txBufferSize = 2;
+
+void sendSerialTest(byte *txBuffer, uint8_t size)
+{
+  char bits[size*8];
+  for (uint8_t buffIdx = 0; buffIdx < size; ++buffIdx)
+  {
+    byte firstByte = txBuffer[buffIdx];
+    for (uint8_t i = 0; i < 8; i++)
+    {
+      int idx = buffIdx*8 + i;
+      if (((firstByte >> (7 - i)) & 0x1) == 0)
+        bits[idx] = '0';
+      else
+        bits[idx] = '1';
+    }
+  }
+
+  Serial.print("Want to send: ");
+  Serial.println(bits);
+  bool res = radio.sendDataSerial(txBuffer, size);
+  if (res)
+  {
+    Serial.println("Success!");
+  }
+  else
+  {
+    Serial.println("Failure!");
+  }
+}
+
 // the loop function runs over and over again forever
 void loop()
 {
   digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on (Note that LOW is the voltage level
-  if (packetWaiting)
-  {
-    // detachInterrupt(CC1101Interrupt);
-    packetWaiting = false;
-    CCPACKET packet;
-    if (radio.receiveData(&packet) > 0)
-    {
-      Serial.println(F("Received packet..."));
-      if (!packet.crc_ok)
-      {
-        Serial.println(F("crc not ok"));
-      }
-      Serial.print(F("lqi: "));
-      Serial.println(lqi(packet.lqi));
-      Serial.print(F("rssi: "));
-      Serial.print(rssi(packet.rssi));
-      Serial.println(F("dBm"));
+  // if (packetWaiting)
+  // {
+  //   // detachInterrupt(CC1101Interrupt);
+  //   packetWaiting = false;
+  //   CCPACKET packet;
+  //   if (radio.receiveData(&packet) > 0)
+  //   {
+  //     Serial.println(F("Received packet..."));
+  //     if (!packet.crc_ok)
+  //     {
+  //       Serial.println(F("crc not ok"));
+  //     }
+  //     Serial.print(F("lqi: "));
+  //     Serial.println(lqi(packet.lqi));
+  //     Serial.print(F("rssi: "));
+  //     Serial.print(rssi(packet.rssi));
+  //     Serial.println(F("dBm"));
 
-      if (packet.crc_ok && packet.length > 0)
-      {
-        Serial.print(F("packet: len "));
-        Serial.println(packet.length);
-        Serial.println(F("data: "));
-        Serial.println((const char *)packet.data);
-      }
-    }
+  //     if (packet.crc_ok && packet.length > 0)
+  //     {
+  //       Serial.print(F("packet: len "));
+  //       Serial.println(packet.length);
+  //       Serial.println(F("data: "));
+  //       Serial.println((const char *)packet.data);
+  //     }
+  //   }
 
-    // attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
-  }
+  //   // attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
+  // }
   unsigned long now = millis();
 
   if (now > lastSend + sendDelay)
   {
-    digitalWrite(LED_BUILTIN, LOW);
-    // detachInterrupt(CC1101Interrupt); //TODO: Determine why these interrupts cause soft resets
-
     lastSend = now;
-    // const char *message = "1010";
-    const char *message = sendBits[sendBitsIndex % sendBitsSize];
-    sendBitsIndex++;
-    CCPACKET packet;
-    // We also need to include the 0 byte at the end of the string
-    packet.length = strlen(message) + 1;
-    strncpy((char *)packet.data, message, packet.length);
-
-    if (radio.sendData(packet))
-    {
-      Serial.println(F("Sent packet..."));
-    }
-    else
-    {
-      Serial.println(F("Failed to send packet..."));
-    }
-
+    digitalWrite(LED_BUILTIN, LOW);
+    // detachInterrupt(CC1101Interrupt); // TODO: Move to cc1101.cpp
+    // sendPacketTest();
+    
+    // Need to disable watchdog timer for long transmissions
+    Serial.print("Sending ... ");
+    ESP.wdtDisable();
+    sendSerialTest(txBuffer, txBufferSize);
+    ESP.wdtEnable(1000);
+    
     // attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
   }
 }

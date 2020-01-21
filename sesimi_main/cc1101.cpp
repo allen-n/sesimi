@@ -38,9 +38,9 @@
 #else
 // Interrupt Pin (also GDO0)
 #define CC1101Interrupt 3 // Pin D1
-#define CC1101_GDO0 3
+#define CC1101_GDO0 5
 // Serial clock output line of CC1101
-#define CC1101_SCLK 5
+#define CC1101_SCLK 4
 // Data out line to CC1101 for continuous TX
 #define CC1101_GDO2 4
 // Select bit for HSPI bus on ESP8622 is pin 15
@@ -67,9 +67,9 @@
   Continuous TX Macros
 */
 // Continuous TX 1
-#define gd02_Select() digitalWrite(CC1101_GDO2, HIGH)
+#define serial_Select() digitalWrite(CC1101_GDO0, HIGH)
 // Continuous TX 0
-#define gd02_Deselect() digitalWrite(CC1101_GDO2, LOW)
+#define serial_Deselect() digitalWrite(CC1101_GDO0, LOW)
 // Get SCLK pin state
 #define getSCLKstate() digitalRead(CC1101_SCLK)
 // Wait until SCLK line goes high
@@ -570,11 +570,11 @@ bool CC1101::sendDataSerial(byte *txBuffer, uint8_t size)
 
   if (((firstByte >> 7) & 0x1) == 0)
   {
-    gd02_Deselect();
+    serial_Deselect();
   }
   else
   {
-    gd02_Select();
+    serial_Select();
   }
 
   setTxState();
@@ -582,14 +582,14 @@ bool CC1101::sendDataSerial(byte *txBuffer, uint8_t size)
   // Transmit the first byte
   for (uint8_t i = 1; i < 8; i++)
   {
-    wait_SCLK_high();
-
-    if (((firstByte >> (7 - i)) & 0x1) == 0)
-      gd02_Deselect();
-    else
-      gd02_Select();
 
     wait_SCLK_low();
+    if (((firstByte >> (7 - i)) & 0x1) == 0)
+      serial_Deselect();
+    else
+      serial_Select();
+
+    wait_SCLK_high();
   }
 
   // Transmite remaining bytes
@@ -597,27 +597,27 @@ bool CC1101::sendDataSerial(byte *txBuffer, uint8_t size)
   {
     for (uint8_t i = 0; i < 8; i++)
     {
-      wait_SCLK_high();
+      wait_SCLK_low();
 
       if (((firstByte >> (7 - i)) & 0x1) == 0)
-        gd02_Deselect();
+        serial_Deselect();
       else
-        gd02_Select();
+        serial_Select();
 
-      wait_SCLK_low();
+      wait_SCLK_high();
     }
   }
 
-  wait_SCLK_high();
   wait_SCLK_low();
+  wait_SCLK_high();
 
-  // Transmit 13 dummy bits (must be 26 if Manchester mode is enabled)
-  gd02_Deselect();
-  for (uint8_t i = 0; i < 13; ++i)
-  {
-    wait_SCLK_high();
-    wait_SCLK_low();
-  }
+  // // Transmit 13 dummy bits (must be 26 if Manchester mode is enabled)
+  // serial_Deselect();
+  // for (uint8_t i = 0; i < 13; ++i)
+  // {
+  //   wait_SCLK_high();
+  //   wait_SCLK_low();
+  // }
   setIdleState();
 }
 
@@ -856,6 +856,7 @@ void CC1101::set300MhzAsk()
 {
   byte PA_Power[CC1101_PATABLE_SIZE] = {0x00, 0xC2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   setPATable(PA_Power, CC1101_PATABLE_SIZE);
+  pinMode(CC1101_GDO0, OUTPUT); // Config GDO0 as input
   // continuous mode
   writeReg(0x00, 0x0B);
   writeReg(0x02, 0x0C);
