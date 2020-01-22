@@ -106,27 +106,15 @@ void sendPacketTest()
   }
 }
 
-byte txBuffer[] = {0xC3, 0xC3};
-const uint8_t txBufferSize = 2;
+byte txBuffer[] = {
+    0xC3, // 0x55 Preamble
+    0x55,
+    0xC3
+};
+const uint8_t txBufferSize = 3;
 
 void sendSerialTest(byte *txBuffer, uint8_t size)
 {
-  char bits[size*8];
-  for (uint8_t buffIdx = 0; buffIdx < size; ++buffIdx)
-  {
-    byte firstByte = txBuffer[buffIdx];
-    for (uint8_t i = 0; i < 8; i++)
-    {
-      int idx = buffIdx*8 + i;
-      if (((firstByte >> (7 - i)) & 0x1) == 0)
-        bits[idx] = '0';
-      else
-        bits[idx] = '1';
-    }
-  }
-
-  Serial.print("Want to send: ");
-  Serial.println(bits);
   bool res = radio.sendDataSerial(txBuffer, size);
   if (res)
   {
@@ -179,13 +167,13 @@ void loop()
     digitalWrite(LED_BUILTIN, LOW);
     // detachInterrupt(CC1101Interrupt); // TODO: Move to cc1101.cpp
     // sendPacketTest();
-    
+
     // Need to disable watchdog timer for long transmissions
     Serial.print("Sending ... ");
     ESP.wdtDisable();
     sendSerialTest(txBuffer, txBufferSize);
     ESP.wdtEnable(1000);
-    
+
     // attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
   }
 }

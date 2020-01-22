@@ -565,16 +565,19 @@ bool CC1101::sendDataSerial(byte *txBuffer, uint8_t size)
   if (size <= 0)
     return false;
 
+  String resString = "";
   // MSB of the first byte needs to ready on the data line before strobing TX
   byte firstByte = txBuffer[0];
 
   if (((firstByte >> 7) & 0x1) == 0)
   {
     serial_Deselect();
+    resString += '0';
   }
   else
   {
     serial_Select();
+    resString += '1';
   }
 
   setTxState();
@@ -582,14 +585,20 @@ bool CC1101::sendDataSerial(byte *txBuffer, uint8_t size)
   // Transmit the first byte
   for (uint8_t i = 1; i < 8; i++)
   {
+    wait_SCLK_high();
+
+    if (((firstByte >> (7 - i)) & 0x1) == 0)
+    {
+      serial_Deselect();
+      resString += '0';
+    }
+    else
+    {
+      serial_Select();
+      resString += '1';
+    }
 
     wait_SCLK_low();
-    if (((firstByte >> (7 - i)) & 0x1) == 0)
-      serial_Deselect();
-    else
-      serial_Select();
-
-    wait_SCLK_high();
   }
 
   // Transmite remaining bytes
@@ -597,28 +606,35 @@ bool CC1101::sendDataSerial(byte *txBuffer, uint8_t size)
   {
     for (uint8_t i = 0; i < 8; i++)
     {
-      wait_SCLK_low();
-
-      if (((firstByte >> (7 - i)) & 0x1) == 0)
-        serial_Deselect();
-      else
-        serial_Select();
-
       wait_SCLK_high();
+
+      if (((txBuffer[buffIdx] >> (7 - i)) & 0x1) == 0)
+      {
+        serial_Deselect();
+        resString += '0';
+      }
+      else
+      {
+        serial_Select();
+        resString += '1';
+      }
+
+      wait_SCLK_low();
     }
   }
-
-  wait_SCLK_low();
+  Serial.print(resString);
   wait_SCLK_high();
+  wait_SCLK_low();
 
-  // // Transmit 13 dummy bits (must be 26 if Manchester mode is enabled)
-  // serial_Deselect();
-  // for (uint8_t i = 0; i < 13; ++i)
-  // {
-  //   wait_SCLK_high();
-  //   wait_SCLK_low();
-  // }
+  // Transmit 13 dummy bits (must be 26 if Manchester mode is enabled)
+  serial_Deselect();
+  for (uint8_t i = 0; i < 13; ++i)
+  {
+    wait_SCLK_high();
+    wait_SCLK_low();
+  }
   setIdleState();
+  return true;
 }
 
 /**
@@ -856,23 +872,20 @@ void CC1101::set300MhzAsk()
 {
   byte PA_Power[CC1101_PATABLE_SIZE] = {0x00, 0xC2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   setPATable(PA_Power, CC1101_PATABLE_SIZE);
-  pinMode(CC1101_GDO0, OUTPUT); // Config GDO0 as input
+  pinMode(CC1101_GDO0, OUTPUT); // Config GDO0 as input for serial TX
   // continuous mode
   writeReg(0x00, 0x0B);
   writeReg(0x02, 0x0C);
   writeReg(0x03, 0x47);
+  writeReg(0x06, 0x1C);
   writeReg(0x08, 0x12);
-  writeReg(0x0B, 0x06);
   writeReg(0x0D, 0x0B);
-  writeReg(0x0E, 0x89);
-  writeReg(0x0F, 0xD8);
-  writeReg(0x10, 0xF4);
-  writeReg(0x11, 0x43);
+  writeReg(0x0E, 0xBB);
+  writeReg(0x0F, 0x13);
+  writeReg(0x10, 0x84);
+  writeReg(0x11, 0x66);
   writeReg(0x12, 0x30);
-  writeReg(0x15, 0x15);
-  writeReg(0x18, 0x18);
-  writeReg(0x19, 0x16);
-  writeReg(0x20, 0xFB);
+  writeReg(0x13, 0x02);
   writeReg(0x22, 0x11);
   writeReg(0x23, 0xE9);
   writeReg(0x24, 0x2A);
@@ -880,29 +893,29 @@ void CC1101::set300MhzAsk()
   writeReg(0x26, 0x1F);
   writeReg(0x2C, 0x81);
   writeReg(0x2D, 0x35);
-  writeReg(0x2E, 0x00);
 
   /**
     Address Config = No address check 
-    Base Frequency = 299.999756 
+    Base Frequency = 304.999725 
     CRC Autoflush = false 
     CRC Enable = false 
-    Carrier Frequency = 299.999756 
+    Carrier Frequency = 304.999725 
     Channel Number = 0 
     Channel Spacing = 199.951172 
     Data Format = Synchronous serial mode 
-    Data Rate = 0.50056 
-    Deviation = 5.157471 
+    Data Rate = 0.5548 
+    Deviation = 47.607422 
     Device Address = 0 
     Manchester Enable = false 
     Modulation Format = ASK/OOK 
     PA Ramping = false 
-    Packet Length = 255 
+    Packet Length = 28 
     Packet Length Mode = Infinite packet length mode 
-    Preamble Count = 4 
-    RX Filter BW = 58.035714 
+    Preamble Count = 2 
+    RX Filter BW = 203.125000 
     Sync Word Qualifier Mode = No preamble/sync 
     TX Power = 10 
     Whitening = false 
+    PA table 
    **/
 }
