@@ -14,19 +14,26 @@ Node MCU Driver code (necessary if building on Windows like I am), the bottom of
 
 We are using the Solu CC1101 Wireless Transceiver Module with spring Antenna for Arduino// Wireless RF Transceiver 315/433/868/915MHZ + spring Antenna Wireless Module, link to purchase [here](https://smile.amazon.com/gp/product/B00XDL9E64/ref=ppx_yo_dt_b_asin_title_o00_s00?ie=UTF8&psc=1)
 
-Pinout thanks to [David](https://smile.amazon.com/gp/profile/amzn1.account.AFHOMZSV6FL4BO6DST5TR4UGLGQQ/ref=cm_cr_dp_d_gw_tr?ie=UTF8):
+NodeMCU ESP8266 Pinout here:
+![NodeMCU Esp8266 Board](https://i.imgur.com/JrsXTNt.jpg)
 
-1.GND 2.VCC
 
-3.GDO0 4.CSN
+CC1101 Pinout thanks to [David](https://smile.amazon.com/gp/profile/amzn1.account.AFHOMZSV6FL4BO6DST5TR4UGLGQQ/ref=cm_cr_dp_d_gw_tr?ie=UTF8):
 
-5.SCLK 6.SI
-
-7.SO 8.GDO2
+[Pin#]. [Label]
+1. GND 
+2. VCC
+3. GDO0 
+4. CSN
+5. SCLK 
+6. SI
+7. SO
+8. GDO2
 
 For our particular combination of boards, this mapping looks like the following from CC1101 to NodeMCU ESP8622:
-* 1 -> GND
-* 2 -> 3V3
+* [CC1101 Pin #] -> [ESP8266 Pin Name] (NodeMCU Board Pin Name)
+* 1 -> GND (GND)
+* 2 -> 3V3 (3V3)
 * 3 -> GPIO5 (D1)
 * 4 -> GPIO15 (D8)
 * 5 -> GPIO14 (D5)
