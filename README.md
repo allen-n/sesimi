@@ -1,6 +1,17 @@
 # sesimi
 The goal of this project is a defense against fixed code gate attack based on the [OpenSesame Attack](https://github.com/samyk/opensesame).
 
+### Current Issues:
+* CC1101 broadcasting to 309 MHz, rather than 300. Will likely need to modify antenna to correct
+* Code transmission timing isn't exactly the same as remote, likely a minor problem
+
+### TODOs:
+1. Move broadcast frequency down to 300 Mhz
+2. Fix transmission timing (i.e. kBaud rate)
+3. Clean up code to use cc1101-arduino library function calls for radio setup, function calls for setting arbirary transmission data, and arbitrarily long transmissions (as much as is allowed by ESP8266 watchdog hardware timer)
+4. Implement DeBrujn Sequence
+5. Write python scripts to automate sniffing for remote frequency and codes 
+
 ## Getting Started
 
 ### NodeMCU ESP8266 (HiLetgo)

@@ -107,11 +107,11 @@ void sendPacketTest()
 }
 
 byte txBuffer[] = {
-    0xC3, // 0x55 Preamble
-    0x55,
-    0xC3
-};
-const uint8_t txBufferSize = 3;
+    // 0xE8, 0xEE, 0x88, 0xEE, 0x8E
+    0x8E, 0x88, 0xEE, 0x88, 0xE8
+    };
+
+const uint8_t txBufferSize = 5;
 
 void sendSerialTest(byte *txBuffer, uint8_t size)
 {
@@ -130,35 +130,7 @@ void sendSerialTest(byte *txBuffer, uint8_t size)
 void loop()
 {
   digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on (Note that LOW is the voltage level
-  // if (packetWaiting)
-  // {
-  //   // detachInterrupt(CC1101Interrupt);
-  //   packetWaiting = false;
-  //   CCPACKET packet;
-  //   if (radio.receiveData(&packet) > 0)
-  //   {
-  //     Serial.println(F("Received packet..."));
-  //     if (!packet.crc_ok)
-  //     {
-  //       Serial.println(F("crc not ok"));
-  //     }
-  //     Serial.print(F("lqi: "));
-  //     Serial.println(lqi(packet.lqi));
-  //     Serial.print(F("rssi: "));
-  //     Serial.print(rssi(packet.rssi));
-  //     Serial.println(F("dBm"));
 
-  //     if (packet.crc_ok && packet.length > 0)
-  //     {
-  //       Serial.print(F("packet: len "));
-  //       Serial.println(packet.length);
-  //       Serial.println(F("data: "));
-  //       Serial.println((const char *)packet.data);
-  //     }
-  //   }
-
-  //   // attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
-  // }
   unsigned long now = millis();
 
   if (now > lastSend + sendDelay)
@@ -168,8 +140,8 @@ void loop()
     // detachInterrupt(CC1101Interrupt); // TODO: Move to cc1101.cpp
     // sendPacketTest();
 
+    // Serial.print("Sending ... ");
     // Need to disable watchdog timer for long transmissions
-    Serial.print("Sending ... ");
     ESP.wdtDisable();
     sendSerialTest(txBuffer, txBufferSize);
     ESP.wdtEnable(1000);
@@ -177,3 +149,33 @@ void loop()
     // attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
   }
 }
+
+// if (packetWaiting)
+// {
+//   // detachInterrupt(CC1101Interrupt);
+//   packetWaiting = false;
+//   CCPACKET packet;
+//   if (radio.receiveData(&packet) > 0)
+//   {
+//     Serial.println(F("Received packet..."));
+//     if (!packet.crc_ok)
+//     {
+//       Serial.println(F("crc not ok"));
+//     }
+//     Serial.print(F("lqi: "));
+//     Serial.println(lqi(packet.lqi));
+//     Serial.print(F("rssi: "));
+//     Serial.print(rssi(packet.rssi));
+//     Serial.println(F("dBm"));
+
+//     if (packet.crc_ok && packet.length > 0)
+//     {
+//       Serial.print(F("packet: len "));
+//       Serial.println(packet.length);
+//       Serial.println(F("data: "));
+//       Serial.println((const char *)packet.data);
+//     }
+//   }
+
+//   // attachInterrupt(CC1101Interrupt, messageReceived, FALLING);
+// }
