@@ -879,11 +879,11 @@ writeReg(0x02, 0x0C);
 writeReg(0x03, 0x47);
 writeReg(0x08, 0x12);
 writeReg(0x0B, 0x06);
-writeReg(0x0D, 0x0B);
-writeReg(0x0E, 0x89);
-writeReg(0x0F, 0xD8);
+writeReg(CC1101_FREQ2, 0x0B);
+writeReg(CC1101_FREQ1, 0x89);
+writeReg(CC1101_FREQ0, 0xD8);
 writeReg(CC1101_MDMCFG4, 0xF6);
-writeReg(CC1101_MDMCFG3, 0x43);
+writeReg(CC1101_MDMCFG3, 0x4E);
 writeReg(0x12, 0x30);
 writeReg(0x15, 0x15);
 writeReg(0x18, 0x18);
@@ -908,7 +908,7 @@ writeReg(0x2E, 0x00);
   Channel Number = 0 
   Channel Spacing = 199.951172 
   Data Format = Synchronous serial mode 
-  Data Rate = 20
+  Data Rate = 2.07043
   Deviation = 5.157471 
   Device Address = 0 
   Manchester Enable = false 
